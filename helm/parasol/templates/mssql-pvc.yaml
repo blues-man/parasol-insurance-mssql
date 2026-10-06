@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "parasol.mssqlDataName" . }}
+  labels:
+    {{- include "parasol.mssqlLabels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mssql.storageSize }}
+  {{- with .Values.mssql.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}

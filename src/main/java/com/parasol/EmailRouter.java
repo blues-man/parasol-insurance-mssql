@@ -11,8 +11,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parasol.model.Email;
 
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -45,7 +43,6 @@ public class EmailRouter {
         this.store = store;
     }
 
-    @Incoming("emails-in")
     public void consume(String json) {
         try {
             JsonNode node = mapper.readTree(json);

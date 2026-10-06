@@ -1,0 +1,44 @@
+# Container image of the Quarkus application
+image:
+  repository: quay.io/bluesman/parasol-mssql
+  tag: latest
+  pullPolicy: Always
+
+# SQL Server 2022 settings (per Microsoft quickstart for OpenShift)
+mssql:
+  image: mcr.microsoft.com/mssql/server:2022-latest
+  edition: Developer
+  # ClusterIP (in-namespace only; the OpenShift quota in nvinto-dev forbids LoadBalancer).
+  # The Microsoft guide uses LoadBalancer — set it back with --set mssql.serviceType=LoadBalancer
+  serviceType: ClusterIP
+  storageSize: 8Gi
+  # Leave empty to use the cluster default storage class (guide default)
+  storageClass: ""
+  # Set to an existing secret name to skip creating the secret below
+  existingSecret: ""
+  # SA password. Override with --set mssql.saPassword=<password> or use existingSecret.
+  # Must satisfy the SQL Server password policy (min 8 chars, 3 of 4 character sets).
+  saPassword: P@rasol-2026-Sql
+  resources:
+    requests:
+      memory: "2G"
+      cpu: "2000m"
+    limits:
+      memory: "2G"
+      cpu: "2000m"
+
+# Quarkus application settings
+app:
+  replicaCount: 1
+  database: parasol
+  service:
+    port: 8080
+  route:
+    enabled: true
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"

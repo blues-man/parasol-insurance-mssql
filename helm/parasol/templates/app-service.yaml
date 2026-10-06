@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "parasol.appName" . }}
+  labels:
+    {{- include "parasol.appLabels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "parasol.appName" . }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.app.service.port }}
+      targetPort: http
+  type: ClusterIP

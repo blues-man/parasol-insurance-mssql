@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data
+  labels:
+    app.kubernetes.io/name: mssql
+    app.kubernetes.io/part-of: parasol-insurance
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi

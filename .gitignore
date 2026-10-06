@@ -93,4 +93,12 @@ yarn.lock
 **/target/**
 /.quarkus/cli/plugins/quarkus-cli-catalog.json
 
+# Quarkus dev-mode logs
+*.log
+
+# Packaged Helm charts
+helm/**/*.tgz
+
+# Container image exports
+*.tar
 

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: parasol
+description: Parasol Insurance Quarkus application backed by SQL Server 2022 on OpenShift
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

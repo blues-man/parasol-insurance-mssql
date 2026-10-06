@@ -1,0 +1,17 @@
+{{- if .Values.app.route.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "parasol.appName" . }}
+  labels:
+    {{- include "parasol.appLabels" . | nindent 4 }}
+spec:
+  to:
+    kind: Service
+    name: {{ include "parasol.appName" . }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end -}}

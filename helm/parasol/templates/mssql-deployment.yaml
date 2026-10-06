@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parasol.mssqlName" . }}
+  labels:
+    {{- include "parasol.mssqlLabels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "parasol.mssqlName" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "parasol.mssqlLabels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      hostname: mssqlinst
+      securityContext:
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: mssql
+          image: {{ .Values.mssql.image }}
+          resources:
+            {{- toYaml .Values.mssql.resources | nindent 12 }}
+          ports:
+            - containerPort: 1433
+          securityContext:
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+          env:
+            - name: MSSQL_PID
+              value: {{ .Values.mssql.edition | quote }}
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parasol.mssqlSecretName" . }}
+                  key: MSSQL_SA_PASSWORD
+          volumeMounts:
+            - name: mssqldb
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: mssqldb
+          persistentVolumeClaim:
+            claimName: {{ include "parasol.mssqlDataName" . }}

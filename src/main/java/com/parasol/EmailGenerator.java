@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -55,10 +52,10 @@ public class EmailGenerator {
             "{\"from\":\"Brock Hensley <brock.hensley@email.com>\",\"subject\":\"Driveway ate my mailbox\",\"body\":\"The ground next to my driveway just gave way and swallowed the mailbox, a section of sidewalk, and part of the lawn. No idea where to start with this.\"}"
     );
 
-    private final Emitter<String> emitter;
+    private final EmailRouter router;
 
-    public EmailGenerator(@Channel("emails-out") Emitter<String> emitter) {
-        this.emitter = emitter;
+    public EmailGenerator(EmailRouter router) {
+        this.router = router;
     }
 
     @Scheduled(every = "45s", delayed = "5s")
@@ -67,7 +64,7 @@ public class EmailGenerator {
             return;
         }
         String email = EMAILS.get(RANDOM.nextInt(EMAILS.size()));
-        emitter.send(email);
+        router.consume(email);
         sentCount.incrementAndGet();
     }
 }

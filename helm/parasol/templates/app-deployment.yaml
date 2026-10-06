@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parasol.appName" . }}
+  labels:
+    {{- include "parasol.appLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "parasol.appName" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "parasol.appLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: parasol-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: MSSQL_HOST
+              value: {{ include "parasol.mssqlName" . }}
+            - name: MSSQL_USER
+              value: "sa"
+            - name: MSSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parasol.mssqlSecretName" . }}
+                  key: MSSQL_SA_PASSWORD
+            - name: MSSQL_DATABASE
+              value: {{ .Values.app.database | quote }}
+          startupProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: http
+            periodSeconds: 15
+      # SQL Server does not auto-create the database: wait for it and create it
+      # before the app starts (uses the sqlcmd bundled in the SQL Server image).
+      initContainers:
+        - name: mssql-db-create
+          image: {{ .Values.mssql.image }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              HOST="{{ include "parasol.mssqlName" . }}"
+              DB="{{ .Values.app.database }}"
+              echo "Waiting for SQL Server at ${HOST}:1433 to accept connections..."
+              until /opt/mssql-tools18/bin/sqlcmd -S "${HOST}" -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" -h -1 >/dev/null 2>&1; do
+                echo "SQL Server not ready yet, retrying in 5s..."
+                sleep 5
+              done
+              echo "Creating database ${DB} if it does not exist..."
+              /opt/mssql-tools18/bin/sqlcmd -S "${HOST}" -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "IF DB_ID('${DB}') IS NULL CREATE DATABASE [${DB}]"
+              echo "Database ${DB} is ready."
+          env:
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parasol.mssqlSecretName" . }}
+                  key: MSSQL_SA_PASSWORD
