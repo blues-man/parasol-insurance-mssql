@@ -1,6 +1,6 @@
 # AGENTS.md — Guidance for AI agents working on this repo
 
-Parasol Insurance demo: a Quarkus 3.17.5 (Java 17) REST application backed by
+Parasol Insurance demo: a Quarkus 3.40.1 (Java 21) REST application backed by
 **SQL Server 2022**, deployed to a **Red Hat OpenShift** cluster (namespace
 `nvinto-dev`) via the Helm chart in `helm/parasol/`.
 
@@ -31,7 +31,7 @@ k8s/mssql/                       Raw MSSQL manifests (Microsoft quickstart, Open
   oc exec -n nvinto-dev deploy/mssql-deployment -- /opt/mssql-tools18/bin/sqlcmd \
     -S localhost -U sa -P '<password>' -C -Q "IF DB_ID('parasol') IS NULL CREATE DATABASE parasol"
   ```
-- Schema is managed by Hibernate `quarkus.hibernate-orm.database.generation=drop-and-create`
+- Schema is managed by Hibernate `quarkus.hibernate-orm.schema-management.strategy=drop-and-create`
   with `import.sql` seed data. `ALTER SEQUENCE claim_seq RESTART WITH 9;` is valid
   T-SQL — Panache's `@GeneratedValue` resolves to the `claim_seq` sequence on SQL Server.
 
